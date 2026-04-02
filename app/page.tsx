@@ -25,6 +25,18 @@ export default function Home() {
   const supabase = createClient();
 
   useEffect(() => {
+    // Restore results from session storage if they exist
+    const savedResults = sessionStorage.getItem("cvAnalysisResults");
+    if (savedResults) {
+      try {
+        const parsed = JSON.parse(savedResults);
+        setAnalysisResults(parsed);
+        setShowResults(true);
+      } catch (e) {
+        sessionStorage.removeItem("cvAnalysisResults");
+      }
+    }
+
     // Check active sessions and sets the user
     supabase.auth.getUser().then(({ data }) => {
       setUser(data?.user || null);
@@ -49,6 +61,7 @@ export default function Home() {
     }
 
     await supabase.auth.signOut();
+    sessionStorage.removeItem("cvAnalysisResults");
     
     if (showResults) {
       setShowResults(false);
@@ -80,6 +93,7 @@ export default function Home() {
 
       const resultData = await response.json();
       setAnalysisResults(resultData);
+      sessionStorage.setItem("cvAnalysisResults", JSON.stringify(resultData));
       setIsAnalyzing(false);
       setShowResults(true);
       window.scrollTo({ top: 0, behavior: "smooth" });
