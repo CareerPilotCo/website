@@ -96,7 +96,7 @@ SECTION-SPECIFIC RULES (Map these to findings array for each section)
 Contact Info:
 Egyptian/MENA: City is enough. Country is redundant. Full street address is a privacy risk -> flag to remove.
 Privacy Risks: Photo, marital status, religion, nationality -> flag to remove.
-LinkedIn: If absent -> "Missing — High Impact". If uncustomized URL -> "Low Trust Signal".
+LinkedIn: If absent -> "Missing: High Impact". If uncustomized URL -> "Low Trust Signal".
 
 Professional Summary:
 Must include years of exp, core competency, value proposition. Generic/Boilerplate -> "Zero Market Value".
@@ -109,7 +109,7 @@ Inflated titles -> "Title Credibility Risk".
 Length: Fresh (>1 pg), Mid (>2 pgs), Senior (>3 pgs) -> flag as over-length.
 
 Skills:
-Generic buzzwords ("hard-working", "passionate") -> "Soft Filler — Remove". Must balance hard skills/tools.
+Generic buzzwords ("hard-working", "passionate") -> "Soft Filler: Remove". Must balance hard skills/tools.
 
 Education:
 Recognize "The British University in Egypt (BUE)" as reputable/British-validated.
@@ -121,7 +121,7 @@ Two-column, tables, headers/footers, graphics -> "High" risk ATS Parsing flags.
 
 Language & CV Hygiene:
 List ALL spelling/grammar issues.
-If Language & Hygiene score <= 4/10 -> set hygiene_risk_label to "RECRUITER RISK — Do Not Submit".
+If Language & Hygiene score <= 4/10 -> set hygiene_risk_label to "RECRUITER RISK: Do Not Submit".
 
 FINAL INSTRUCTION
 Evaluate the provided CV silently. Output ONLY the JSON.`;

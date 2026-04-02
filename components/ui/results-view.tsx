@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { Lock, FileText, CheckCircle2, AlertCircle } from "lucide-react";
+import Link from "next/link";
 
 interface ResultsViewProps {
   isLoggedIn?: boolean;
@@ -50,29 +51,15 @@ export function ResultsView({ isLoggedIn = false, results }: ResultsViewProps) {
           </div>
           
           <div className="space-y-4 text-gray-700 leading-relaxed text-lg">
-            <p>
-              {data?.executive_summary || "Your CV has solid experience content, but it is not structured as a Fresh-level CV, and several key elements required for early-career applications are missing — especially a Career Objective, skills list, and modern contact formatting."}
-            </p>
+            {data?.executive_summary && (
+              <p>{data.executive_summary}</p>
+            )}
             {data?.verdict && (
               <div className="mt-6 p-4 bg-orange-50 border border-orange-200 rounded-xl flex items-start gap-3">
                 <AlertCircle className="w-6 h-6 text-orange-600 shrink-0 mt-0.5" />
                 <div>
                   <strong className="text-orange-900 block mb-1">Overall readiness: {data.verdict}</strong>
                   <span className="text-orange-800">{data.verdict_reason}</span>
-                </div>
-              </div>
-            )}
-            {!data && (
-              <p>
-                The document uses a functional format, which causes significant ATS risks and makes your experience harder for recruiters to scan. With the right restructuring, your CV can become much clearer and far more competitive.
-              </p>
-            )}
-            {!data && (
-              <div className="mt-6 p-4 bg-orange-50 border border-orange-200 rounded-xl flex items-start gap-3">
-                <AlertCircle className="w-6 h-6 text-orange-600 shrink-0 mt-0.5" />
-                <div>
-                  <strong className="text-orange-900 block mb-1">Overall readiness:</strong>
-                  <span className="text-orange-800">Needs significant revision before submitting to employers.</span>
                 </div>
               </div>
             )}
@@ -101,39 +88,20 @@ export function ResultsView({ isLoggedIn = false, results }: ResultsViewProps) {
                     </tr>
                   </thead>
                   <tbody className="text-gray-700">
-                    <tr className="border-b border-gray-100">
-                      <td className="p-4 font-medium">Contact Information</td>
-                      <td className="p-4 text-orange-600">Present but Weak</td>
-                      <td className="p-4 text-right font-semibold">4 / 10</td>
-                    </tr>
-                    <tr className="border-b border-gray-100">
-                      <td className="p-4 font-medium">Career Objective <span className="text-sm font-normal text-gray-500">(Fresh level)</span></td>
-                      <td className="p-4 text-red-600">Missing</td>
-                      <td className="p-4 text-right font-semibold">0 / 10</td>
-                    </tr>
-                    <tr className="border-b border-gray-100">
-                      <td className="p-4 font-medium">Work Experience / Internships</td>
-                      <td className="p-4 text-green-600">Present</td>
-                      <td className="p-4 text-right font-semibold">22 / 30</td>
-                    </tr>
-                    <tr className="border-b border-gray-100">
-                      <td className="p-4 font-medium">Skills</td>
-                      <td className="p-4 text-red-600">Missing</td>
-                      <td className="p-4 text-right font-semibold">0 / 20</td>
-                    </tr>
-                    <tr className="border-b border-gray-100">
-                      <td className="p-4 font-medium">Education</td>
-                      <td className="p-4 text-green-600">Present</td>
-                      <td className="p-4 text-right font-semibold">8 / 10</td>
-                    </tr>
-                    <tr className="border-b border-gray-100">
-                      <td className="p-4 font-medium">ATS Structure & Formatting</td>
-                      <td className="p-4 text-red-600">High Risk</td>
-                      <td className="p-4 text-right font-semibold">3 / 10</td>
-                    </tr>
+                    {data?.sections?.map((section: any, idx: number) => (
+                      <tr key={idx} className="border-b border-gray-100">
+                        <td className="p-4 font-medium">{section.name}</td>
+                        <td className={`p-4 font-medium ${
+                          section.status === 'Strong' ? 'text-green-600' :
+                          section.status === 'Acceptable' ? 'text-blue-600' :
+                          section.status === 'Needs Work' ? 'text-orange-600' : 'text-red-600'
+                        }`}>{section.status}</td>
+                        <td className="p-4 text-right font-semibold">{section.score} / {section.max_score}</td>
+                      </tr>
+                    ))}
                     <tr className="border-b border-gray-200 bg-gray-50/50">
                       <td colSpan={2} className="p-4 font-bold text-gray-900">Total Score</td>
-                      <td className="p-4 text-right font-bold text-xl text-blue-600">43 / 100</td>
+                      <td className="p-4 text-right font-bold text-xl text-blue-600">{data?.total_score || 0} / 100</td>
                     </tr>
                   </tbody>
                 </table>
@@ -148,51 +116,34 @@ export function ResultsView({ isLoggedIn = false, results }: ResultsViewProps) {
               </div>
               
               <div className="space-y-8">
-                <div>
-                  <h4 className="text-xl font-bold text-gray-800 mb-3 flex items-center gap-2">
-                    Contact Information <span className="text-sm font-semibold bg-orange-100 text-orange-700 px-3 py-1 rounded-full">Present but Weak</span>
-                  </h4>
-                  <ul className="list-disc pl-5 space-y-2 text-gray-600">
-                    <li>Includes full street address — this is unnecessary and should be removed.</li>
-                    <li>City and email are present, but phone number is missing entirely.</li>
-                    <li>Presentation is dated and not aligned with modern CV standards.</li>
-                  </ul>
-                  <div className="mt-3 bg-blue-50 text-blue-800 p-4 rounded-lg font-medium">
-                    <strong>Fix:</strong> Keep only Name | City | Phone | Email | LinkedIn (optional).
-                  </div>
-                </div>
-
-                <div>
-                  <h4 className="text-xl font-bold text-gray-800 mb-3 flex items-center gap-2">
-                    Career Objective <span className="text-sm font-semibold bg-red-100 text-red-700 px-3 py-1 rounded-full">Missing</span>
-                  </h4>
-                  <p className="text-gray-600 mb-2">Fresh-level CVs must include a forward-looking Career Objective explaining what you aim to contribute and what field you are targeting. Your CV instead starts with a Career Summary, which is appropriate only for mid-career professionals.</p>
-                  <p className="text-gray-600">This mismatch weakens your early-career positioning.</p>
-                </div>
-
-                <div>
-                  <h4 className="text-xl font-bold text-gray-800 mb-3 flex items-center gap-2">
-                    Work Experience <span className="text-sm font-semibold bg-green-100 text-green-700 px-3 py-1 rounded-full">Present</span>
-                  </h4>
-                  <p className="text-gray-600 mb-4">You have strong real experience, which is excellent for a Fresh candidate.</p>
-                  <div className="grid md:grid-cols-2 gap-6">
-                    <div className="bg-green-50/50 p-5 rounded-xl border border-green-100">
-                      <h5 className="font-bold text-green-800 mb-2">Strengths</h5>
-                      <ul className="list-disc pl-5 text-gray-700 space-y-1">
-                        <li>Clear responsibilities.</li>
-                        <li>Shows progression across roles.</li>
+                {data?.sections?.map((section: any, idx: number) => (
+                  <div key={idx}>
+                    <h4 className="text-xl font-bold text-gray-800 mb-3 flex items-center gap-2">
+                      {section.name} 
+                      <span className={`text-sm font-semibold px-3 py-1 rounded-full ${
+                          section.status === 'Strong' ? 'bg-green-100 text-green-700' :
+                          section.status === 'Acceptable' ? 'bg-blue-100 text-blue-700' :
+                          section.status === 'Needs Work' ? 'bg-orange-100 text-orange-700' : 'bg-red-100 text-red-700'
+                      }`}>
+                        {section.status}
+                      </span>
+                    </h4>
+                    {section.findings?.length > 0 ? (
+                      <ul className="list-disc pl-5 space-y-2 text-gray-600">
+                        {section.findings.map((finding: string, i: number) => (
+                          <li key={i}>{finding}</li>
+                        ))}
                       </ul>
-                    </div>
-                    <div className="bg-red-50/50 p-5 rounded-xl border border-red-100">
-                      <h5 className="font-bold text-red-800 mb-2">Weaknesses</h5>
-                      <ul className="list-disc pl-5 text-gray-700 space-y-1">
-                        <li>All experience is grouped functionally, not chronologically.</li>
-                        <li>Bullet points lack outcomes or impact.</li>
-                        <li>Some responsibilities appear repeated.</li>
-                      </ul>
-                    </div>
+                    ) : (
+                      <p className="text-gray-600">No major issues identified.</p>
+                    )}
+                    {section.rewrite_offer && (
+                      <div className="mt-3 bg-blue-50 text-blue-800 p-4 rounded-lg font-medium">
+                        <strong>Action Needed:</strong> This section requires significant rewriting.
+                      </div>
+                    )}
                   </div>
-                </div>
+                ))}
               </div>
             </section>
 
@@ -209,21 +160,27 @@ export function ResultsView({ isLoggedIn = false, results }: ResultsViewProps) {
                   An Applicant Tracking System (ATS) is software recruiters use to scan, parse, and filter CVs before a human sees them. Poor formatting — such as tables, non-standard layouts, or functional structures — can cause your CV to be read incorrectly or filtered out.
                 </p>
                 
-                <div className="bg-red-50/80 p-6 rounded-xl border border-red-200 mt-4">
-                  <h4 className="font-bold text-red-900 mb-3 flex items-center gap-2">
-                    <AlertCircle className="w-5 h-5" /> High-Risk Issues Identified
-                  </h4>
-                  <ul className="list-disc pl-5 space-y-2 text-red-800">
-                    <li>Functional format (ATS prefers chronological).</li>
-                    <li>Section headers not standard (e.g., “Adult Care Experience,” “Childcare Experience” instead of “Work Experience”).</li>
-                    <li>Full address — causes parsing errors.</li>
-                    <li>Inconsistent spacing across sections.</li>
-                    <li>Missing skills section — drastically reduces keyword matching.</li>
-                  </ul>
-                  <p className="text-red-900 font-semibold mt-4">
-                    These issues can cause your CV to be rejected before a recruiter even sees it.
-                  </p>
-                </div>
+                {data?.ats_flags && data.ats_flags.length > 0 ? (
+                  <div className="bg-red-50/80 p-6 rounded-xl border border-red-200 mt-4">
+                    <h4 className="font-bold text-red-900 mb-3 flex items-center gap-2">
+                      <AlertCircle className="w-5 h-5" /> High-Risk Issues Identified
+                    </h4>
+                    <ul className="list-disc pl-5 space-y-2 text-red-800">
+                      {data.ats_flags.map((flag: any, idx: number) => (
+                        <li key={idx}><strong>{flag.risk_level} Risk:</strong> {flag.flag}</li>
+                      ))}
+                    </ul>
+                    <p className="text-red-900 font-semibold mt-4">
+                      These issues can cause your CV to be rejected before a recruiter even sees it.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="bg-green-50 p-6 rounded-xl border border-green-200 mt-4">
+                    <h4 className="font-bold text-green-900 mb-3 flex items-center gap-2">
+                      <CheckCircle2 className="w-5 h-5" /> No major ATS issues detected
+                    </h4>
+                  </div>
+                )}
               </div>
             </section>
 
@@ -231,18 +188,20 @@ export function ResultsView({ isLoggedIn = false, results }: ResultsViewProps) {
             <section>
               <div className="flex items-center gap-3 mb-6">
                 <div className="bg-green-600 text-white w-10 h-10 rounded-xl flex items-center justify-center font-bold text-lg">5</div>
-                <h3 className="text-2xl font-bold text-gray-900">Priority Fix List — Top 5 Actions</h3>
+                <h3 className="text-2xl font-bold text-gray-900">Priority Fix List — Top Actions</h3>
               </div>
               
               <div className="bg-white p-6 rounded-xl border-2 border-green-100 shadow-sm">
                 <p className="text-gray-600 mb-4 font-medium">Here is what you should fix first, in order of impact:</p>
-                <ol className="list-decimal pl-5 space-y-3 text-gray-800 font-medium">
-                  <li>Add a proper Career Objective for Fresh-level CVs.</li>
-                  <li>Create a clear Skills section with technical, soft, and domain skills.</li>
-                  <li>Rebuild the Work Experience section into reverse-chronological order.</li>
-                  <li>Remove your full address and add your phone number.</li>
-                  <li>Correct spacing, bullet alignment, and header consistency.</li>
-                </ol>
+                {data?.priority_fixes && data.priority_fixes.length > 0 ? (
+                  <ol className="list-decimal pl-5 space-y-3 text-gray-800 font-medium">
+                    {data.priority_fixes.sort((a: any, b: any) => a.rank - b.rank).map((fix: any, idx: number) => (
+                      <li key={idx}>{fix.action}</li>
+                    ))}
+                  </ol>
+                ) : (
+                  <p className="text-gray-600">Your CV is looking great, no critical priority fixes needed right now.</p>
+                )}
               </div>
             </section>
 
@@ -268,12 +227,12 @@ export function ResultsView({ isLoggedIn = false, results }: ResultsViewProps) {
                   Register or login for free to see your complete CV analysis, detailed score breakdown, ATS risk flags, and priority fix list.
                 </p>
                 <div className="flex flex-col gap-3">
-                  <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-8 rounded-full transition shadow-lg hover:shadow-xl hover:-translate-y-0.5 text-lg">
+                  <Link href="/login" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-8 rounded-full transition shadow-lg hover:shadow-xl hover:-translate-y-0.5 text-lg block">
                     Sign Up for Free
-                  </button>
-                  <button className="w-full bg-white hover:bg-gray-50 text-gray-900 border-2 border-gray-200 font-bold py-4 px-8 rounded-full transition text-lg">
+                  </Link>
+                  <Link href="/login" className="w-full bg-white hover:bg-gray-50 text-gray-900 border-2 border-gray-200 font-bold py-4 px-8 rounded-full transition text-lg block">
                     Log In to Your Account
-                  </button>
+                  </Link>
                 </div>
                 <p className="text-sm text-gray-500 mt-6 flex items-center justify-center gap-1.5">
                   <FileText className="w-4 h-4" />

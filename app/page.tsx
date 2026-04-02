@@ -10,8 +10,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
+  const router = useRouter();
   const [dragActive, setDragActive] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [careerLevel, setCareerLevel] = useState<string>("Fresh");
@@ -41,7 +43,19 @@ export default function Home() {
   }, []);
 
   const handleLogout = async () => {
+    if (showResults) {
+      const isConfirmed = window.confirm("Are you sure you want to log out? You will be redirected to the login page and lose your current analysis results.");
+      if (!isConfirmed) return;
+    }
+
     await supabase.auth.signOut();
+    
+    if (showResults) {
+      setShowResults(false);
+      setAnalysisResults(null);
+      setFile(null);
+      router.push("/login");
+    }
   };
 
   const analyzeCV = async () => {
@@ -352,25 +366,24 @@ export default function Home() {
             </div>
 
             {/* Support Section */}
-            <div id="contact-us" className="mt-32 w-full max-w-7xl mx-auto relative rounded-3xl overflow-hidden shadow-[0_-20px_40px_-15px_rgba(0,0,0,0.1),0_20px_40px_-15px_rgba(0,0,0,0.1)] bg-white/40 backdrop-blur-sm border border-white/20">
+            <div id="contact-us" className="mt-32 w-full max-w-7xl mx-auto relative rounded-3xl overflow-hidden shadow-[0_-20px_40px_-15px_rgba(0,0,0,0.1),0_20px_40px_-15px_rgba(0,0,0,0.1)] bg-gray-100 min-h-[450px] md:min-h-[500px]">
               <Image 
                 src="/Generated Image March 22, 2026 - 12_18PM (1).png" 
                 alt="Support Team Background" 
-                width={2000} 
-                height={600} 
-                className="w-full h-auto object-cover opacity-90"
+                fill
+                className="object-cover opacity-90"
                 priority
               />
               
-              <div className="absolute inset-0 flex items-center justify-center p-6">
-                <div className="bg-white/80 backdrop-blur-md rounded-3xl p-8 md:p-10 border border-white/50 shadow-2xl flex flex-col items-center text-center max-w-md transform transition-all hover:scale-105">
-                  <h2 className="text-3xl font-bold text-gray-900 mb-4">We're here for support</h2>
-                  <p className="text-gray-600 mb-8 leading-relaxed">
+              <div className="absolute inset-0 flex items-center justify-center p-4 sm:p-6 bg-black/5">
+                <div className="bg-white/90 backdrop-blur-md rounded-3xl p-6 sm:p-8 md:p-10 border border-white/50 shadow-2xl flex flex-col items-center text-center max-w-md w-full transform transition-all hover:scale-105">
+                  <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3 sm:mb-4">We're here for support</h2>
+                  <p className="text-gray-600 mb-6 sm:mb-8 leading-relaxed text-sm sm:text-base">
                     Have any questions or need help with your CV review? Our experts are ready to assist you.
                   </p>
-                  <button className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-full font-medium transition shadow-lg hover:shadow-xl">
+                  <a href="mailto:info@careerpilot.com" className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-full font-medium transition shadow-lg hover:shadow-xl inline-block">
                     Contact Us
-                  </button>
+                  </a>
                 </div>
               </div>
             </div>

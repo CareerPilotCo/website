@@ -63,13 +63,15 @@ export async function POST(req: Request) {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        model: "google/gemini-3-flash-preview", // Adjust model as needed (e.g., anthropic/claude-3.5-sonnet)
+        model: "google/gemini-3.1-pro-preview", // Adjust model as needed (e.g., anthropic/claude-3.5-sonnet)
+        temperature: 0.4, // Add a little variance but keep it analytical
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: `The user's career level is: ${careerLevel}\n\nHere is the CV text to analyze:\n\n${cvText}` }
         ],
         response_format: { type: "json_object" }
-      })
+      }),
+      cache: "no-store" // Ensure Next.js does not cache this fetch call
     });
 
     if (!response.ok) {
