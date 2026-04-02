@@ -94,6 +94,28 @@ export default function Home() {
       const resultData = await response.json();
       setAnalysisResults(resultData);
       sessionStorage.setItem("cvAnalysisResults", JSON.stringify(resultData));
+
+      // Save to Supabase DB if user is logged in
+      if (user) {
+        try {
+          const { error: dbError } = await supabase
+            .from("cv_reviews")
+            .insert([
+              {
+                user_id: user.id,
+                career_level: careerLevel,
+                analysis_result: resultData,
+              }
+            ]);
+            
+          if (dbError) {
+            console.error("Error saving review to database:", dbError);
+          }
+        } catch (err) {
+          console.error("Exception saving to database:", err);
+        }
+      }
+
       setIsAnalyzing(false);
       setShowResults(true);
       window.scrollTo({ top: 0, behavior: "smooth" });
@@ -160,15 +182,15 @@ export default function Home() {
           {/* Navigation Header */}
           <header className="sticky top-0 z-50 bg-white/40 backdrop-blur-md border-b border-white/20">
             <nav className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-              <div className="flex items-center gap-2">
+              <Link href="/" className="flex items-center gap-2">
                 <Image
                   src="/Logo.png"
                   alt="CareerPilot Logo"
                   width={240}
                   height={60}
-                  className="h-14 w-auto object-contain"
+                  className="h-14 w-auto object-contain cursor-pointer"
                 />
-              </div>
+              </Link>
 
               <div className="hidden md:flex items-center gap-8">
                 <a 
@@ -197,6 +219,9 @@ export default function Home() {
               {user ? (
                 <div className="flex items-center gap-4">
                   <span className="text-gray-700 font-medium hidden sm:block">Hi, {user.user_metadata?.full_name || user.email?.split('@')[0]}</span>
+                  <Link href="/dashboard" className="text-gray-700 hover:text-blue-600 font-medium transition cursor-pointer">
+                    Dashboard
+                  </Link>
                   <button onClick={handleLogout} className="bg-red-50 hover:bg-red-100 text-red-600 px-6 py-2 rounded-full font-medium transition border border-red-200">
                     Logout
                   </button>
@@ -436,13 +461,15 @@ export default function Home() {
           <footer className="w-full bg-white/40 backdrop-blur-md border-t border-white/20 shadow-[0_-10px_40px_rgba(0,0,0,0.03)] mt-auto relative z-10">
             <div className="max-w-7xl mx-auto px-6 py-8 flex flex-col md:flex-row justify-between items-center gap-6">
               <div className="flex flex-col items-center md:items-start gap-2">
-                <Image
-                  src="/Logo.png"
-                  alt="CareerPilot Logo"
-                  width={160}
-                  height={40}
-                  className="h-8 w-auto object-contain"
-                />
+                <Link href="/">
+                  <Image
+                    src="/Logo.png"
+                    alt="CareerPilot Logo"
+                    width={160}
+                    height={40}
+                    className="h-8 w-auto object-contain cursor-pointer"
+                  />
+                </Link>
                 <a href="mailto:info@careerpilot.com" className="text-gray-500 hover:text-blue-600 transition text-sm font-medium mt-1">
                   info@careerpilot.com
                 </a>

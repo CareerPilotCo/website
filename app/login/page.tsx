@@ -77,7 +77,9 @@ export default function LoginPage() {
             className="w-full max-w-md bg-white/80 backdrop-blur-xl border border-white/40 shadow-2xl rounded-3xl p-8"
           >
             <div className="flex justify-center mb-8">
-              <Image src="/Logo.png" alt="CareerPilot Logo" width={200} height={50} className="h-10 w-auto object-contain" />
+              <Link href="/">
+                <Image src="/Logo.png" alt="CareerPilot Logo" width={200} height={50} className="h-10 w-auto object-contain cursor-pointer" />
+              </Link>
             </div>
 
             <h2 className="text-2xl font-bold text-gray-900 text-center mb-2">
