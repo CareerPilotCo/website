@@ -39,7 +39,32 @@ export default function Home() {
 
     // Check active sessions and sets the user
     supabase.auth.getUser().then(({ data }) => {
-      setUser(data?.user || null);
+      const currentUser = data?.user || null;
+      setUser(currentUser);
+      
+      // Save pending results to DB if coming back from login
+      if (currentUser) {
+        const pendingSave = sessionStorage.getItem("pendingDbSave");
+        const savedResults = sessionStorage.getItem("cvAnalysisResults");
+        const savedCareerLevel = sessionStorage.getItem("cvCareerLevel") || "Unknown";
+        if (pendingSave === "true" && savedResults) {
+          try {
+            const parsed = JSON.parse(savedResults);
+            supabase.from("cv_reviews").insert([{
+              user_id: currentUser.id,
+              career_level: savedCareerLevel,
+              analysis_result: parsed,
+            }]).then(({ error }) => {
+              if (!error) {
+                sessionStorage.removeItem("pendingDbSave");
+                sessionStorage.removeItem("cvCareerLevel");
+              }
+            });
+          } catch (e) {
+            console.error("Error saving pending results", e);
+          }
+        }
+      }
     });
 
     // Listen for changes on auth state (log in, log out, etc.)
@@ -94,6 +119,14 @@ export default function Home() {
       const resultData = await response.json();
       setAnalysisResults(resultData);
       sessionStorage.setItem("cvAnalysisResults", JSON.stringify(resultData));
+      sessionStorage.setItem("cvCareerLevel", careerLevel);
+
+      if (!user) {
+        setIsAnalyzing(false);
+        sessionStorage.setItem("pendingDbSave", "true");
+        router.push("/login");
+        return;
+      }
 
       // Save to Supabase DB if user is logged in
       if (user) {

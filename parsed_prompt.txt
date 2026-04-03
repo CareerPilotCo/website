@@ -60,7 +60,10 @@ codeJSON
 
         "status": "Strong" | "Acceptable" | "Needs Work" | "Critical Risk",
 
-        "findings": ["Detailed observation 1", "Detailed observation 2"],
+        "findings": [
+          "A cohesive paragraph stating what is wrong, why it matters, and how to fix it.",
+          "Another cohesive paragraph for a different issue."
+        ],
 
         "rewrite_offer": true | false,
 
@@ -164,7 +167,10 @@ If a section scores < 60% of its max, set rewrite_offer: true for that section.
 
 If 3 or more sections score < 60%, set the root overhaul_offer: true.
 
-SECTION-SPECIFIC RULES (Map these to findings array for each section)Contact Info:
+SECTION-SPECIFIC RULES (Map these to findings array for each section)
+Each finding must be written as a full paragraph. State the specific issue observed, explain why it damages hirability or ATS performance, and give a concrete corrective action. Do not truncate to a single line.
+
+Contact Info:
 
 Egyptian/MENA: City is enough. Country is redundant. Full street address is a privacy risk -> flag to remove.
 

@@ -1,8 +1,9 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { Lock, FileText, CheckCircle2, AlertCircle } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Lock, FileText, CheckCircle2, AlertCircle, MessageSquare, Send, Mail } from "lucide-react";
 import Link from "next/link";
+import { useState } from "react";
 
 interface ResultsViewProps {
   isLoggedIn?: boolean;
@@ -10,6 +11,16 @@ interface ResultsViewProps {
 }
 
 export function ResultsView({ isLoggedIn = false, results }: ResultsViewProps) {
+  const [hasGivenFeedback, setHasGivenFeedback] = useState(false);
+  const [feedbackText, setFeedbackText] = useState("");
+
+  const handleFeedbackSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (feedbackText.trim()) {
+      setHasGivenFeedback(true);
+    }
+  };
+
   // If the result is an error, show it
   if (results?.type === "error") {
     return (
@@ -66,10 +77,10 @@ export function ResultsView({ isLoggedIn = false, results }: ResultsViewProps) {
           </div>
         </div>
 
-        {/* Locked Content Area */}
+        {/* Content Area */}
         <div className="relative">
-          {/* Content (Blurred if not logged in) */}
-          <div className={`p-8 md:p-12 space-y-12 ${!isLoggedIn ? 'filter blur-[6px] select-none opacity-60 pointer-events-none' : ''}`}>
+          {/* Content */}
+          <div className="p-8 md:p-12 space-y-12">
             
             {/* Section 2 */}
             <section>
@@ -117,8 +128,8 @@ export function ResultsView({ isLoggedIn = false, results }: ResultsViewProps) {
               
               <div className="space-y-8">
                 {data?.sections?.map((section: any, idx: number) => (
-                  <div key={idx}>
-                    <h4 className="text-xl font-bold text-gray-800 mb-3 flex items-center gap-2">
+                  <div key={idx} className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
+                    <h4 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
                       {section.name} 
                       <span className={`text-sm font-semibold px-3 py-1 rounded-full ${
                           section.status === 'Strong' ? 'bg-green-100 text-green-700' :
@@ -129,18 +140,58 @@ export function ResultsView({ isLoggedIn = false, results }: ResultsViewProps) {
                       </span>
                     </h4>
                     {section.findings?.length > 0 ? (
-                      <ul className="list-disc pl-5 space-y-2 text-gray-600">
-                        {section.findings.map((finding: string, i: number) => (
-                          <li key={i}>{finding}</li>
-                        ))}
-                      </ul>
+                      <div className="space-y-4">
+                        {section.findings.map((finding: any, i: number) => {
+                          const isString = typeof finding === 'string';
+                          const problem = isString ? finding : finding.problem;
+                          const solution = isString ? null : finding.solution;
+                          
+                          return (
+                            <div key={i} className="flex flex-col gap-2 p-4 bg-gray-50 rounded-lg border border-gray-100">
+                              <div className="flex items-start gap-2">
+                                <AlertCircle className="w-5 h-5 text-orange-500 mt-0.5 shrink-0" />
+                                <div>
+                                  <span className="font-semibold text-gray-800 block">Issue identified:</span>
+                                  <p className="text-gray-600">{problem}</p>
+                                </div>
+                              </div>
+                              
+                              {(solution || isString) && (
+                                <motion.div 
+                                  initial={false}
+                                  animate={{ 
+                                    filter: hasGivenFeedback ? "blur(0px)" : "blur(5px)",
+                                    opacity: hasGivenFeedback ? 1 : 0.5 
+                                  }}
+                                  transition={{ duration: 0.8, ease: "easeOut" }}
+                                  className="flex items-start gap-2 mt-2 select-none"
+                                >
+                                  <CheckCircle2 className="w-5 h-5 text-green-500 mt-0.5 shrink-0" />
+                                  <div>
+                                    <span className="font-semibold text-green-800 block">Recommended Solution:</span>
+                                    <p className="text-gray-600">{isString && !hasGivenFeedback ? "Detailed solution available in the unlocked view." : solution || finding}</p>
+                                  </div>
+                                </motion.div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
                     ) : (
                       <p className="text-gray-600">No major issues identified.</p>
                     )}
                     {section.rewrite_offer && (
-                      <div className="mt-3 bg-blue-50 text-blue-800 p-4 rounded-lg font-medium">
-                        <strong>Action Needed:</strong> This section requires significant rewriting.
-                      </div>
+                      <motion.div 
+                        initial={false}
+                        animate={{ 
+                          filter: hasGivenFeedback ? "blur(0px)" : "blur(5px)",
+                          opacity: hasGivenFeedback ? 1 : 0.5 
+                        }}
+                        transition={{ duration: 0.8, ease: "easeOut" }}
+                        className="mt-4 bg-blue-50 text-blue-800 p-4 rounded-lg font-medium select-none"
+                      >
+                        <strong>Action Needed:</strong> This section requires significant rewriting. Our detailed recommendation is blurred.
+                      </motion.div>
                     )}
                   </div>
                 ))}
@@ -185,13 +236,21 @@ export function ResultsView({ isLoggedIn = false, results }: ResultsViewProps) {
             </section>
 
             {/* Section 5 */}
-            <section>
+            <section className="relative">
               <div className="flex items-center gap-3 mb-6">
                 <div className="bg-green-600 text-white w-10 h-10 rounded-xl flex items-center justify-center font-bold text-lg">5</div>
                 <h3 className="text-2xl font-bold text-gray-900">Priority Fix List — Top Actions</h3>
               </div>
               
-              <div className="bg-white p-6 rounded-xl border-2 border-green-100 shadow-sm">
+              <motion.div 
+                initial={false}
+                animate={{ 
+                  filter: hasGivenFeedback ? "blur(0px)" : "blur(6px)",
+                  opacity: hasGivenFeedback ? 1 : 0.6 
+                }}
+                transition={{ duration: 0.8, ease: "easeOut" }}
+                className="bg-white p-6 rounded-xl border-2 border-green-100 shadow-sm select-none"
+              >
                 <p className="text-gray-600 mb-4 font-medium">Here is what you should fix first, in order of impact:</p>
                 {data?.priority_fixes && data.priority_fixes.length > 0 ? (
                   <ol className="list-decimal pl-5 space-y-3 text-gray-800 font-medium">
@@ -202,45 +261,101 @@ export function ResultsView({ isLoggedIn = false, results }: ResultsViewProps) {
                 ) : (
                   <p className="text-gray-600">Your CV is looking great, no critical priority fixes needed right now.</p>
                 )}
-              </div>
+              </motion.div>
+
+              <AnimatePresence>
+                {!hasGivenFeedback && (
+                  <motion.div 
+                    initial={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.4 }}
+                    className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none"
+                  >
+                    <div className="bg-white/90 backdrop-blur-sm p-4 rounded-xl border border-gray-200 shadow-lg flex items-center gap-3">
+                      <Lock className="w-5 h-5 text-gray-500" />
+                      <span className="font-semibold text-gray-700">Unlock below to view priority fixes</span>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </section>
 
           </div>
 
-          {/* Paywall / Auth Gate Overlay */}
-          {!isLoggedIn && (
-            <div className="absolute inset-0 z-10">
-              {/* Fade gradient from top to hide content properly */}
-              <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/80 to-white rounded-b-3xl pointer-events-none" />
-              
-              <motion.div 
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-                className="relative z-20 bg-white shadow-2xl rounded-3xl p-8 max-w-lg mx-auto text-center border border-gray-100 mt-12 md:mt-24"
-              >
-                <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-inner">
-                  <Lock className="w-8 h-8" />
-                </div>
-                <h3 className="text-3xl font-bold text-gray-900 mb-4">Unlock Full Detailed Review</h3>
-                <p className="text-gray-600 mb-8 text-lg">
-                  Register or login for free to see your complete CV analysis, detailed score breakdown, ATS risk flags, and priority fix list.
-                </p>
-                <div className="flex flex-col gap-3">
-                  <Link href="/login" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-8 rounded-full transition shadow-lg hover:shadow-xl hover:-translate-y-0.5 text-lg block">
-                    Sign Up for Free
-                  </Link>
-                  <Link href="/login" className="w-full bg-white hover:bg-gray-50 text-gray-900 border-2 border-gray-200 font-bold py-4 px-8 rounded-full transition text-lg block">
-                    Log In to Your Account
-                  </Link>
-                </div>
-                <p className="text-sm text-gray-500 mt-6 flex items-center justify-center gap-1.5">
-                  <FileText className="w-4 h-4" />
-                  Your results are securely saved.
-                </p>
-              </motion.div>
-            </div>
-          )}
+          {/* Paywall / Auth Gate Overlay -> CTA */}
+          <div className="relative z-20 pb-12 px-8 -mt-8">
+            <AnimatePresence mode="wait">
+              {!hasGivenFeedback ? (
+                <motion.div 
+                  key="feedback-form"
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95, height: 0, overflow: "hidden" }}
+                  transition={{ duration: 0.5 }}
+                  className="bg-white shadow-2xl rounded-3xl p-8 max-w-2xl mx-auto text-center border-2 border-blue-100 relative overflow-hidden"
+                >
+                  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-400 via-purple-500 to-blue-400" />
+                  <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-inner">
+                    <MessageSquare className="w-8 h-8" />
+                  </div>
+                  <h3 className="text-3xl font-bold text-gray-900 mb-4">Unlock Your Solutions</h3>
+                  <p className="text-gray-600 mb-6 text-lg">
+                    You can see your scores and identified issues above. To reveal our <strong>recommended solutions</strong> and <strong>priority fixes</strong> in real-time, please leave a quick feedback on your experience.
+                  </p>
+                  <form onSubmit={handleFeedbackSubmit} className="flex flex-col gap-3">
+                    <textarea
+                      required
+                      value={feedbackText}
+                      onChange={(e) => setFeedbackText(e.target.value)}
+                      placeholder="Tell us what you think..."
+                      className="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-blue-600 focus:border-transparent resize-none h-24 text-gray-900 bg-white"
+                    />
+                    <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-full transition shadow-lg hover:shadow-xl hover:-translate-y-0.5 text-lg">
+                      Submit & Unlock Solutions
+                    </button>
+                  </form>
+                </motion.div>
+              ) : (
+                <motion.div 
+                  key="cta-form"
+                  initial={{ opacity: 0, y: 40, height: 0 }}
+                  animate={{ opacity: 1, y: 0, height: "auto" }}
+                  transition={{ duration: 0.6, delay: 0.2 }}
+                  className="bg-gradient-to-br from-blue-900 to-indigo-900 shadow-2xl rounded-3xl p-8 md:p-12 max-w-3xl mx-auto text-center border border-indigo-500/30 relative overflow-hidden text-white"
+                >
+                  <div className="absolute top-0 left-0 w-full h-full bg-[url('/noise.png')] opacity-10 pointer-events-none mix-blend-overlay"></div>
+                  
+                  <h3 className="text-3xl md:text-4xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-blue-200 to-white">
+                    {data?.custom_cta?.headline || "Don't let these mistakes cost you your dream job."}
+                  </h3>
+                  
+                  <p className="text-blue-100 mb-8 text-lg md:text-xl leading-relaxed max-w-2xl mx-auto">
+                    {data?.custom_cta?.body || "Your CV has critical flaws that ATS systems and recruiters are actively filtering out. We can fix these issues, perfectly align your experience, and rewrite your bullet points for maximum impact."}
+                  </p>
+                  
+                  <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                    <a 
+                      href={`https://wa.me/971501234567?text=${encodeURIComponent(data?.custom_cta?.whatsapp_message || 'Hi, I just got my CV reviewed and I need professional help fixing it. Can we schedule a consultation?')}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full sm:w-auto bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold py-4 px-8 rounded-full transition shadow-[0_0_20px_rgba(37,211,102,0.3)] hover:shadow-[0_0_30px_rgba(37,211,102,0.5)] hover:-translate-y-1 text-lg flex items-center justify-center gap-2"
+                    >
+                      <Send className="w-5 h-5" />
+                      Contact on WhatsApp
+                    </a>
+                    
+                    <a 
+                      href="mailto:info@careerpilot.com?subject=Professional CV Review Request"
+                      className="w-full sm:w-auto bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold py-4 px-8 rounded-full transition hover:-translate-y-1 text-lg flex items-center justify-center gap-2"
+                    >
+                      <Mail className="w-5 h-5" />
+                      Send an Email
+                    </a>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
       </div>
     </div>

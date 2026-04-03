@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { BackgroundGradientAnimation } from "@/components/ui/background-gradient-animation";
@@ -16,9 +16,20 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [isFromAnalysis, setIsFromAnalysis] = useState(false);
   
   const router = useRouter();
   const supabase = createClient();
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const pendingSave = sessionStorage.getItem("pendingDbSave");
+      if (pendingSave === "true") {
+        setIsFromAnalysis(true);
+        setIsSignUp(true);
+      }
+    }
+  }, []);
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -83,10 +94,18 @@ export default function LoginPage() {
             </div>
 
             <h2 className="text-2xl font-bold text-gray-900 text-center mb-2">
-              {isSignUp ? "Create an account" : "Welcome back"}
+              {isFromAnalysis 
+                ? "Get your free CV review!" 
+                : isSignUp 
+                  ? "Create an account" 
+                  : "Welcome back"}
             </h2>
             <p className="text-gray-500 text-center mb-8">
-              {isSignUp ? "Sign up to save your CV reviews" : "Log in to access your dashboard"}
+              {isFromAnalysis 
+                ? "Sign up or log in to view your detailed CV analysis results and get actionable feedback." 
+                : isSignUp 
+                  ? "Sign up to save your CV reviews" 
+                  : "Log in to access your dashboard"}
             </p>
 
             {error && (
