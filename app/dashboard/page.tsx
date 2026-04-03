@@ -82,7 +82,11 @@ export default function DashboardPage() {
       <main className="flex-1 max-w-5xl w-full mx-auto px-4 py-12">
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Your Saved Reviews</h1>
-          <Link href="/" className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-xl font-medium transition shadow-md">
+          <Link 
+            href="/" 
+            onClick={() => sessionStorage.removeItem("cvAnalysisResults")}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-xl font-medium transition shadow-md"
+          >
             New Review
           </Link>
         </div>
@@ -100,7 +104,11 @@ export default function DashboardPage() {
             <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
             <h3 className="text-xl font-bold text-gray-800 mb-2">No reviews yet</h3>
             <p className="text-gray-500 mb-6">Upload your CV to get your first professional AI analysis.</p>
-            <Link href="/" className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl font-semibold transition inline-block">
+            <Link 
+              href="/" 
+              onClick={() => sessionStorage.removeItem("cvAnalysisResults")}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl font-semibold transition inline-block"
+            >
               Analyze a CV
             </Link>
           </motion.div>

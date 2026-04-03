@@ -175,6 +175,13 @@ export default function Home() {
     }
   };
 
+  const handleLogoClick = () => {
+    sessionStorage.removeItem("cvAnalysisResults");
+    setShowResults(false);
+    setAnalysisResults(null);
+    setFile(null);
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <BackgroundGradientAnimation>
@@ -182,7 +189,7 @@ export default function Home() {
           {/* Navigation Header */}
           <header className="sticky top-0 z-50 bg-white/40 backdrop-blur-md border-b border-white/20">
             <nav className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-              <Link href="/" className="flex items-center gap-2">
+              <Link href="/" onClick={handleLogoClick} className="flex items-center gap-2">
                 <Image
                   src="/Logo.png"
                   alt="CareerPilot Logo"
@@ -461,7 +468,7 @@ export default function Home() {
           <footer className="w-full bg-white/40 backdrop-blur-md border-t border-white/20 shadow-[0_-10px_40px_rgba(0,0,0,0.03)] mt-auto relative z-10">
             <div className="max-w-7xl mx-auto px-6 py-8 flex flex-col md:flex-row justify-between items-center gap-6">
               <div className="flex flex-col items-center md:items-start gap-2">
-                <Link href="/">
+                <Link href="/" onClick={handleLogoClick}>
                   <Image
                     src="/Logo.png"
                     alt="CareerPilot Logo"
