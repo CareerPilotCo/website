@@ -295,7 +295,9 @@ export default function DashboardPage() {
             ) : (
               <div className="grid gap-4">
                 {reviews.map((review) => {
-                  const result = review.analysis_result?.data;
+                  const result = review.analysis_result.type === "success"
+                    ? review.analysis_result.data
+                    : undefined;
                   const candidateName = typeof result?.candidate_name === "string"
                     ? result.candidate_name.trim()
                     : "";

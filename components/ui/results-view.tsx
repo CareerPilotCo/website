@@ -34,7 +34,7 @@ export function ResultsView({ results }: ResultsViewProps) {
     );
   }
 
-  const data = results?.data;
+  const data = results?.type === "success" ? results.data : undefined;
   const candidateName = typeof data?.candidate_name === "string" ? data.candidate_name.trim() : "";
   const defaultWhatsappMessage = candidateName
     ? `Hi, I'm ${candidateName}. I just got my CV reviewed and I'd like professional help improving it. Can we schedule a consultation?`
