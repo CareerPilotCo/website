@@ -131,21 +131,24 @@ export function ResultsView({ results }: ResultsViewProps) {
               </div>
               
               <div className="space-y-8">
-                {data?.sections?.map((section: ReviewSection, idx: number) => (
-                  <div key={idx} className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
-                    <h4 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-                      {section.name} 
-                      <span className={`text-sm font-semibold px-3 py-1 rounded-full ${
-                          section.status === 'Strong' ? 'bg-green-100 text-green-700' :
-                          section.status === 'Acceptable' ? 'bg-blue-100 text-blue-700' :
-                          section.status === 'Needs Work' ? 'bg-orange-100 text-orange-700' : 'bg-red-100 text-red-700'
-                      }`}>
-                        {section.status}
-                      </span>
-                    </h4>
-                    {section.findings?.length > 0 ? (
-                      <div className="space-y-4">
-                        {section.findings.map((finding, i: number) => {
+                {data?.sections?.map((section: ReviewSection, idx: number) => {
+                  const findings = section.findings ?? [];
+
+                  return (
+                    <div key={idx} className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
+                      <h4 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                        {section.name} 
+                        <span className={`text-sm font-semibold px-3 py-1 rounded-full ${
+                            section.status === 'Strong' ? 'bg-green-100 text-green-700' :
+                            section.status === 'Acceptable' ? 'bg-blue-100 text-blue-700' :
+                            section.status === 'Needs Work' ? 'bg-orange-100 text-orange-700' : 'bg-red-100 text-red-700'
+                        }`}>
+                          {section.status}
+                        </span>
+                      </h4>
+                      {findings.length > 0 ? (
+                        <div className="space-y-4">
+                          {findings.map((finding, i: number) => {
                           const isString = typeof finding === 'string';
                           const problem = isString ? finding : finding.problem;
                           const solution = isString ? null : finding.solution;
@@ -179,26 +182,27 @@ export function ResultsView({ results }: ResultsViewProps) {
                               )}
                             </div>
                           );
-                        })}
-                      </div>
-                    ) : (
-                      <p className="text-gray-600">No major issues identified.</p>
-                    )}
-                    {section.rewrite_offer && (
-                      <motion.div 
-                        initial={false}
-                        animate={{ 
-                          filter: hasGivenFeedback ? "blur(0px)" : "blur(5px)",
-                          opacity: hasGivenFeedback ? 1 : 0.5 
-                        }}
-                        transition={{ duration: 0.8, ease: "easeOut" }}
-                        className="mt-4 bg-blue-50 text-blue-800 p-4 rounded-lg font-medium select-none"
-                      >
-                        <strong>Action Needed:</strong> This section requires significant rewriting. Our detailed recommendation is blurred.
-                      </motion.div>
-                    )}
-                  </div>
-                ))}
+                          })}
+                        </div>
+                      ) : (
+                        <p className="text-gray-600">No major issues identified.</p>
+                      )}
+                      {section.rewrite_offer && (
+                        <motion.div 
+                          initial={false}
+                          animate={{ 
+                            filter: hasGivenFeedback ? "blur(0px)" : "blur(5px)",
+                            opacity: hasGivenFeedback ? 1 : 0.5 
+                          }}
+                          transition={{ duration: 0.8, ease: "easeOut" }}
+                          className="mt-4 bg-blue-50 text-blue-800 p-4 rounded-lg font-medium select-none"
+                        >
+                          <strong>Action Needed:</strong> This section requires significant rewriting. Our detailed recommendation is blurred.
+                        </motion.div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </section>
 
