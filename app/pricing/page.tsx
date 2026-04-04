@@ -152,24 +152,7 @@ export default function PricingPage() {
                 ))}
               </div>
 
-              <div className="mt-12 rounded-[2rem] border border-white/40 bg-white/70 p-8 shadow-lg backdrop-blur-md">
-                <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-                  <div className="max-w-2xl">
-                    <p className="text-sm font-semibold uppercase tracking-[0.18em] text-gray-500">Premium Activation</p>
-                    <h2 className="mt-2 text-2xl font-bold text-gray-900">Need us to activate premium for your account?</h2>
-                    <p className="mt-3 text-gray-600">
-                      This page gives you the pricing and upgrade CTA. If you have not connected a payment gateway yet, premium users can still be activated manually from Supabase Auth metadata by setting `plan` to `premium`.
-                    </p>
-                  </div>
-
-                  <a
-                    href="mailto:info@careerpilot.com?subject=CareerPilot%20Premium%20Activation"
-                    className="inline-flex items-center justify-center rounded-full border border-gray-200 bg-white px-6 py-4 text-sm font-semibold text-gray-800 transition hover:bg-gray-50"
-                  >
-                    Contact for activation
-                  </a>
-                </div>
-              </div>
+              
             </section>
           </main>
         </div>
