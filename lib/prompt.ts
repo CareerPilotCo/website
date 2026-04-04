@@ -37,7 +37,8 @@ Your output must conform exactly to one of the following two JSON structures.
 {
   "type": "success",
   "data": {
-    "verdict": "Keep" | "Maybe" | "Toss",
+    "candidate_name": "Full name exactly as written on the CV, or null if it is missing or unclear.",
+    "verdict": "Keep" | "Needs Work" | "Toss",
     "verdict_reason": "One blunt sentence explaining the single biggest reason for the verdict.",
     "career_level": "Fresh" | "Mid" | "Senior",
     "executive_summary": "A short, high-level paragraph covering the CV's overall strengths and most critical flaws.",
@@ -101,6 +102,7 @@ Max Scores: Contact Info (10), Prof. Summary (10), Work Exp. (30), Skills (20), 
 Status Calibration: Strong (90-100% of max), Acceptable (70-80%), Needs Work (50-60%), Critical Risk (< 50%).
 Quantification Penalty (Work Experience): For Mid/Senior levels: If < 50% of bullets contain metrics (%, $, #), Work Experience score cannot exceed 20/30 (cap_applied: true). Fresh level: Flag gaps in findings, but do not apply the hard cap.
 The "So What?" Test: If a bullet shows task-only with no impact/result, deduct quality points and flag in findings.
+Candidate Name Extraction: Extract the candidate's full name only when it is explicitly present and clearly identifiable in the CV header or contact details. Do not infer it from the email address, file name, company names, or partial mentions. If uncertain, return null.
 
 Verdict Logic:
 Keep: Passes ATS and human review.

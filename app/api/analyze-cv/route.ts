@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { systemPrompt } from "@/lib/prompt";
-// @ts-ignore: Bypassing standard import to avoid Next.js test file read error in pdf-parse
+// @ts-expect-error: Bypassing standard import to avoid Next.js test file read error in pdf-parse
 import pdf from "pdf-parse/lib/pdf-parse.js";
 import mammoth from "mammoth";
 
@@ -93,7 +93,7 @@ export async function POST(req: Request) {
       
       const parsedResult = JSON.parse(resultJson);
       return NextResponse.json(parsedResult, { status: 200 });
-    } catch (parseError) {
+    } catch {
       console.error("Failed to parse LLM response as JSON:", resultJson);
       return NextResponse.json({ error: "LLM did not return valid JSON.", raw_output: resultJson }, { status: 500 });
     }

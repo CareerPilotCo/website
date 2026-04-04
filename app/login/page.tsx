@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import type { ReviewResult } from "@/lib/types";
 import { BackgroundGradientAnimation } from "@/components/ui/background-gradient-animation";
 import { Mail, Lock, AlertCircle, ArrowLeft } from "lucide-react";
 import { motion } from "framer-motion";
@@ -20,6 +21,25 @@ export default function LoginPage() {
   
   const router = useRouter();
   const supabase = createClient();
+
+  const getPendingCandidateName = () => {
+    if (typeof window === "undefined") return null;
+
+    try {
+      const savedResults = sessionStorage.getItem("cvAnalysisResults");
+      if (!savedResults) return null;
+
+      const parsedResults = JSON.parse(savedResults) as ReviewResult;
+      const candidateName = parsedResults.type === "success" ? parsedResults.data?.candidate_name : null;
+
+      if (typeof candidateName !== "string") return null;
+
+      const trimmedName = candidateName.trim();
+      return trimmedName || null;
+    } catch {
+      return null;
+    }
+  };
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -39,11 +59,13 @@ export default function LoginPage() {
 
     try {
       if (isSignUp) {
+        const pendingCandidateName = getPendingCandidateName();
         const { data, error: signUpError } = await supabase.auth.signUp({
           email,
           password,
           options: {
             emailRedirectTo: `${window.location.origin}/auth/callback`,
+            data: pendingCandidateName ? { full_name: pendingCandidateName } : undefined,
           },
         });
         if (signUpError) throw signUpError;
@@ -65,8 +87,8 @@ export default function LoginPage() {
         router.push("/");
         router.refresh();
       }
-    } catch (err: any) {
-      setError(err.message || "An error occurred during authentication.");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "An error occurred during authentication.");
     } finally {
       setLoading(false);
     }

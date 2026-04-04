@@ -1,16 +1,16 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { Lock, FileText, CheckCircle2, AlertCircle, MessageSquare, Send, Mail } from "lucide-react";
-import Link from "next/link";
+import { Lock, CheckCircle2, AlertCircle, MessageSquare, Send, Mail } from "lucide-react";
 import { useState } from "react";
+import type { PriorityFix, ReviewResult, ReviewSection } from "@/lib/types";
 
 interface ResultsViewProps {
   isLoggedIn?: boolean;
-  results?: any;
+  results?: ReviewResult | null;
 }
 
-export function ResultsView({ isLoggedIn = false, results }: ResultsViewProps) {
+export function ResultsView({ results }: ResultsViewProps) {
   const [hasGivenFeedback, setHasGivenFeedback] = useState(false);
   const [feedbackText, setFeedbackText] = useState("");
 
@@ -35,6 +35,10 @@ export function ResultsView({ isLoggedIn = false, results }: ResultsViewProps) {
   }
 
   const data = results?.data;
+  const candidateName = typeof data?.candidate_name === "string" ? data.candidate_name.trim() : "";
+  const defaultWhatsappMessage = candidateName
+    ? `Hi, I'm ${candidateName}. I just got my CV reviewed and I'd like professional help improving it. Can we schedule a consultation?`
+    : "Hi, I just got my CV reviewed and I need professional help fixing it. Can we schedule a consultation?";
 
   return (
     <div className="w-full max-w-5xl mx-auto px-4 py-8">
@@ -99,7 +103,7 @@ export function ResultsView({ isLoggedIn = false, results }: ResultsViewProps) {
                     </tr>
                   </thead>
                   <tbody className="text-gray-700">
-                    {data?.sections?.map((section: any, idx: number) => (
+                    {data?.sections?.map((section: ReviewSection, idx: number) => (
                       <tr key={idx} className="border-b border-gray-100">
                         <td className="p-4 font-medium">{section.name}</td>
                         <td className={`p-4 font-medium ${
@@ -127,7 +131,7 @@ export function ResultsView({ isLoggedIn = false, results }: ResultsViewProps) {
               </div>
               
               <div className="space-y-8">
-                {data?.sections?.map((section: any, idx: number) => (
+                {data?.sections?.map((section: ReviewSection, idx: number) => (
                   <div key={idx} className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
                     <h4 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
                       {section.name} 
@@ -141,7 +145,7 @@ export function ResultsView({ isLoggedIn = false, results }: ResultsViewProps) {
                     </h4>
                     {section.findings?.length > 0 ? (
                       <div className="space-y-4">
-                        {section.findings.map((finding: any, i: number) => {
+                        {section.findings.map((finding, i: number) => {
                           const isString = typeof finding === 'string';
                           const problem = isString ? finding : finding.problem;
                           const solution = isString ? null : finding.solution;
@@ -217,7 +221,7 @@ export function ResultsView({ isLoggedIn = false, results }: ResultsViewProps) {
                       <AlertCircle className="w-5 h-5" /> High-Risk Issues Identified
                     </h4>
                     <ul className="list-disc pl-5 space-y-2 text-red-800">
-                      {data.ats_flags.map((flag: any, idx: number) => (
+                      {data.ats_flags.map((flag, idx: number) => (
                         <li key={idx}><strong>{flag.risk_level} Risk:</strong> {flag.flag}</li>
                       ))}
                     </ul>
@@ -254,7 +258,7 @@ export function ResultsView({ isLoggedIn = false, results }: ResultsViewProps) {
                 <p className="text-gray-600 mb-4 font-medium">Here is what you should fix first, in order of impact:</p>
                 {data?.priority_fixes && data.priority_fixes.length > 0 ? (
                   <ol className="list-decimal pl-5 space-y-3 text-gray-800 font-medium">
-                    {data.priority_fixes.sort((a: any, b: any) => a.rank - b.rank).map((fix: any, idx: number) => (
+                    {[...data.priority_fixes].sort((a: PriorityFix, b: PriorityFix) => a.rank - b.rank).map((fix: PriorityFix, idx: number) => (
                       <li key={idx}>{fix.action}</li>
                     ))}
                   </ol>
@@ -335,7 +339,7 @@ export function ResultsView({ isLoggedIn = false, results }: ResultsViewProps) {
                   
                   <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                     <a 
-                      href={`https://wa.me/971501234567?text=${encodeURIComponent(data?.custom_cta?.whatsapp_message || 'Hi, I just got my CV reviewed and I need professional help fixing it. Can we schedule a consultation?')}`}
+                      href={`https://wa.me/971501234567?text=${encodeURIComponent(data?.custom_cta?.whatsapp_message || defaultWhatsappMessage)}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="w-full sm:w-auto bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold py-4 px-8 rounded-full transition shadow-[0_0_20px_rgba(37,211,102,0.3)] hover:shadow-[0_0_30px_rgba(37,211,102,0.5)] hover:-translate-y-1 text-lg flex items-center justify-center gap-2"

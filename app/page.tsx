@@ -2,12 +2,15 @@
 
 import Image from "next/image";
 import { useState, useRef, useEffect } from "react";
+import type { User } from "@supabase/supabase-js";
 import { UploadCloud, CheckCircle2 } from "lucide-react";
 import { BackgroundGradientAnimation } from "@/components/ui/background-gradient-animation";
 import { ScanningLoader } from "@/components/ui/scanning-loader";
 import { ResultsView } from "@/components/ui/results-view";
 import { motion, AnimatePresence } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
+import { FREE_REVIEW_LIMIT, getUserPlan, hasReachedFreeReviewLimit } from "@/lib/account";
+import type { ReviewResult } from "@/lib/types";
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -19,65 +22,127 @@ export default function Home() {
   const [careerLevel, setCareerLevel] = useState<string>("Fresh");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [showResults, setShowResults] = useState(false);
-  const [analysisResults, setAnalysisResults] = useState<any>(null);
-  const [user, setUser] = useState<any>(null);
+  const [analysisResults, setAnalysisResults] = useState<ReviewResult | null>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [reviewCount, setReviewCount] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const supabase = createClient();
+  const [supabase] = useState(() => createClient());
+
+  const getCandidateNameFromStoredResults = () => {
+    if (typeof window === "undefined") return null;
+
+    try {
+      const savedResults = sessionStorage.getItem("cvAnalysisResults");
+      if (!savedResults) return null;
+
+      const parsedResults = JSON.parse(savedResults) as ReviewResult;
+      const candidateName = parsedResults.type === "success" ? parsedResults.data?.candidate_name : null;
+
+      if (typeof candidateName !== "string") return null;
+
+      const trimmedName = candidateName.trim();
+      return trimmedName || null;
+    } catch {
+      return null;
+    }
+  };
 
   useEffect(() => {
-    // Restore results from session storage if they exist
-    const savedResults = sessionStorage.getItem("cvAnalysisResults");
-    if (savedResults) {
-      try {
-        const parsed = JSON.parse(savedResults);
+    const initializeHome = async () => {
+      const savedResults = sessionStorage.getItem("cvAnalysisResults");
+      if (savedResults) {
+        try {
+        const parsed = JSON.parse(savedResults) as ReviewResult;
         setAnalysisResults(parsed);
         setShowResults(true);
-      } catch (e) {
+      } catch {
         sessionStorage.removeItem("cvAnalysisResults");
       }
-    }
+      }
 
-    // Check active sessions and sets the user
-    supabase.auth.getUser().then(({ data }) => {
+      const { data } = await supabase.auth.getUser();
       const currentUser = data?.user || null;
       setUser(currentUser);
-      
-      // Save pending results to DB if coming back from login
-      if (currentUser) {
-        const pendingSave = sessionStorage.getItem("pendingDbSave");
-        const savedResults = sessionStorage.getItem("cvAnalysisResults");
-        const savedCareerLevel = sessionStorage.getItem("cvCareerLevel") || "Unknown";
-        if (pendingSave === "true" && savedResults) {
-          try {
-            const parsed = JSON.parse(savedResults);
-            supabase.from("cv_reviews").insert([{
-              user_id: currentUser.id,
-              career_level: savedCareerLevel,
-              analysis_result: parsed,
-            }]).then(({ error }) => {
-              if (!error) {
-                sessionStorage.removeItem("pendingDbSave");
-                sessionStorage.removeItem("cvCareerLevel");
-              }
-            });
-          } catch (e) {
-            console.error("Error saving pending results", e);
-          }
+
+      if (!currentUser) {
+        return;
+      }
+
+      const { count, error: countError } = await supabase
+        .from("cv_reviews")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", currentUser.id);
+
+      if (countError) {
+        console.error("Error fetching review count:", countError);
+      }
+
+      const currentReviewCount = count || 0;
+      setReviewCount(currentReviewCount);
+
+      const pendingSave = sessionStorage.getItem("pendingDbSave");
+      const savedCareerLevel = sessionStorage.getItem("cvCareerLevel") || "Unknown";
+      const candidateName = getCandidateNameFromStoredResults();
+
+      if (candidateName && currentUser.user_metadata?.full_name !== candidateName) {
+        const { data: updatedUserData, error: updateError } = await supabase.auth.updateUser({
+          data: {
+            full_name: candidateName,
+          },
+        });
+
+        if (updateError) {
+          console.error("Error updating user profile name:", updateError);
+        } else if (updatedUserData.user) {
+          setUser(updatedUserData.user);
         }
       }
-    });
+
+      if (pendingSave === "true" && savedResults) {
+        if (hasReachedFreeReviewLimit(currentReviewCount, currentUser)) {
+          sessionStorage.removeItem("pendingDbSave");
+          sessionStorage.removeItem("cvCareerLevel");
+          router.push("/pricing");
+          return;
+        }
+
+        try {
+          const parsed = JSON.parse(savedResults);
+          const { error } = await supabase.from("cv_reviews").insert([{
+            user_id: currentUser.id,
+            career_level: savedCareerLevel,
+            analysis_result: parsed,
+          }]);
+
+          if (error) {
+            console.error("Error saving pending results", error);
+          } else {
+            setReviewCount(currentReviewCount + 1);
+            sessionStorage.removeItem("pendingDbSave");
+            sessionStorage.removeItem("cvCareerLevel");
+          }
+        } catch (error) {
+          console.error("Error saving pending results", error);
+        }
+      }
+    };
+
+    initializeHome();
 
     // Listen for changes on auth state (log in, log out, etc.)
     const { data: authListener } = supabase.auth.onAuthStateChange(
       (event, session) => {
         setUser(session?.user || null);
+        if (!session?.user) {
+          setReviewCount(0);
+        }
       }
     );
 
     return () => {
       authListener.subscription.unsubscribe();
     };
-  }, []);
+  }, [router, supabase]);
 
   const handleLogout = async () => {
     if (showResults) {
@@ -98,6 +163,11 @@ export default function Home() {
 
   const analyzeCV = async () => {
     if (!file) return;
+
+    if (hasReachedFreeReviewLimit(reviewCount, user)) {
+      router.push("/pricing");
+      return;
+    }
     
     setIsAnalyzing(true);
     setAnalysisResults(null);
@@ -116,7 +186,7 @@ export default function Home() {
         throw new Error("Analysis failed.");
       }
 
-      const resultData = await response.json();
+      const resultData = await response.json() as ReviewResult;
       setAnalysisResults(resultData);
       sessionStorage.setItem("cvAnalysisResults", JSON.stringify(resultData));
       sessionStorage.setItem("cvCareerLevel", careerLevel);
@@ -143,6 +213,8 @@ export default function Home() {
             
           if (dbError) {
             console.error("Error saving review to database:", dbError);
+          } else {
+            setReviewCount((currentCount) => currentCount + 1);
           }
         } catch (err) {
           console.error("Exception saving to database:", err);
@@ -215,6 +287,10 @@ export default function Home() {
     setFile(null);
   };
 
+  const userPlan = getUserPlan(user);
+  const reviewLimitReached = hasReachedFreeReviewLimit(reviewCount, user);
+  const reviewsRemaining = Math.max(FREE_REVIEW_LIMIT - reviewCount, 0);
+
   return (
     <div className="min-h-screen flex flex-col">
       <BackgroundGradientAnimation>
@@ -240,13 +316,12 @@ export default function Home() {
                 >
                   How it Works
                 </a>
-                <a 
-                  href="#pricing" 
-                  onClick={(e) => scrollToSection(e, 'pricing')}
+                <Link 
+                  href="/pricing"
                   className="text-gray-700 hover:text-gray-900 font-medium transition cursor-pointer"
                 >
                   Pricing
-                </a>
+                </Link>
                 <a 
                   href="#contact-us" 
                   onClick={(e) => scrollToSection(e, 'contact-us')}
@@ -298,6 +373,44 @@ export default function Home() {
               <p className="text-xl text-gray-600 leading-relaxed max-w-2xl">
                 Get personalized feedback, scores, and insights tailored to your industry and location.
               </p>
+
+              {user && (
+                <div className={`w-full max-w-2xl rounded-3xl border px-6 py-5 text-left shadow-lg ${
+                  reviewLimitReached
+                    ? "border-amber-200 bg-amber-50/90"
+                    : "border-blue-200 bg-white/75 backdrop-blur-md"
+                }`}>
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <p className="text-sm font-semibold uppercase tracking-[0.18em] text-gray-500">
+                        {userPlan === "premium" ? "Premium Access" : "Free Plan"}
+                      </p>
+                      <p className="mt-1 text-lg font-semibold text-gray-900">
+                        {userPlan === "premium"
+                          ? "You can keep reviewing CVs without a review limit."
+                          : reviewLimitReached
+                            ? "Your free review has been used. Upgrade to keep reviewing."
+                            : `You have ${reviewsRemaining} free review ${reviewsRemaining === 1 ? "remaining" : "remaining"} before premium is required.`}
+                      </p>
+                      <p className="mt-1 text-sm text-gray-600">
+                        {userPlan === "premium"
+                          ? "Priority support and unlimited review history are available on your account."
+                          : "Premium unlocks unlimited CV reviews, ongoing history, and faster support."}
+                      </p>
+                    </div>
+                    <Link
+                      href="/pricing"
+                      className={`inline-flex items-center justify-center rounded-full px-5 py-3 text-sm font-semibold transition ${
+                        userPlan === "premium"
+                          ? "border border-blue-200 bg-white text-blue-700 hover:bg-blue-50"
+                          : "bg-blue-600 text-white shadow-md hover:bg-blue-700"
+                      }`}
+                    >
+                      {userPlan === "premium" ? "View Plan" : "See Premium"}
+                    </Link>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Upload Section */}
@@ -360,10 +473,26 @@ export default function Home() {
                         e.stopPropagation();
                         analyzeCV();
                       }}
-                      className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-full font-bold text-lg transition shadow-lg hover:shadow-xl w-full transform hover:scale-105 mt-2"
+                      disabled={reviewLimitReached}
+                      className="mt-2 w-full rounded-full bg-blue-600 px-8 py-3 text-lg font-bold text-white shadow-lg transition hover:bg-blue-700 hover:shadow-xl disabled:cursor-not-allowed disabled:bg-blue-300 disabled:shadow-none"
                     >
-                      Analyze CV
+                      {reviewLimitReached ? "Upgrade to Continue" : "Analyze CV"}
                     </button>
+
+                    {reviewLimitReached && (
+                      <div className="w-full rounded-2xl border border-amber-200 bg-amber-50 px-4 py-4 text-left">
+                        <p className="font-semibold text-amber-900">Free review limit reached</p>
+                        <p className="mt-1 text-sm text-amber-800">
+                          Your account already has {reviewCount} saved review{reviewCount === 1 ? "" : "s"}. Upgrade to premium to unlock unlimited new reviews.
+                        </p>
+                        <Link
+                          href="/pricing"
+                          className="mt-3 inline-flex text-sm font-semibold text-blue-700 hover:text-blue-800"
+                        >
+                          View premium pricing
+                        </Link>
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -456,7 +585,7 @@ export default function Home() {
               
               <div className="absolute inset-0 flex items-center justify-center p-4 sm:p-6 bg-black/5">
                 <div className="bg-white/90 backdrop-blur-md rounded-3xl p-6 sm:p-8 md:p-10 border border-white/50 shadow-2xl flex flex-col items-center text-center max-w-md w-full transform transition-all hover:scale-105">
-                  <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3 sm:mb-4">We're here for support</h2>
+                  <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3 sm:mb-4">We&apos;re here for support</h2>
                   <p className="text-gray-600 mb-6 sm:mb-8 leading-relaxed text-sm sm:text-base">
                     Have any questions or need help with your CV review? Our experts are ready to assist you.
                   </p>
