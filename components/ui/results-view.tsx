@@ -152,6 +152,9 @@ export function ResultsView({ results }: ResultsViewProps) {
                           const isString = typeof finding === 'string';
                           const problem = isString ? finding : finding.problem;
                           const solution = isString ? null : finding.solution;
+                          const displayedSolution = isString
+                            ? "Detailed solution available in the unlocked view."
+                            : solution || "Detailed solution available in the unlocked view.";
                           
                           return (
                             <div key={i} className="flex flex-col gap-2 p-4 bg-gray-50 rounded-lg border border-gray-100">
@@ -176,7 +179,9 @@ export function ResultsView({ results }: ResultsViewProps) {
                                   <CheckCircle2 className="w-5 h-5 text-green-500 mt-0.5 shrink-0" />
                                   <div>
                                     <span className="font-semibold text-green-800 block">Recommended Solution:</span>
-                                    <p className="text-gray-600">{isString && !hasGivenFeedback ? "Detailed solution available in the unlocked view." : solution || finding}</p>
+                                    <p className="text-gray-600">
+                                      {isString && !hasGivenFeedback ? "Detailed solution available in the unlocked view." : displayedSolution}
+                                    </p>
                                   </div>
                                 </motion.div>
                               )}
