@@ -13,11 +13,45 @@ interface ResultsViewProps {
 export function ResultsView({ results }: ResultsViewProps) {
   const [hasGivenFeedback, setHasGivenFeedback] = useState(false);
   const [feedbackText, setFeedbackText] = useState("");
+  const [feedbackError, setFeedbackError] = useState("");
+  const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
 
-  const handleFeedbackSubmit = (e: React.FormEvent) => {
+  const handleFeedbackSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (feedbackText.trim()) {
+    setFeedbackError("");
+
+    if (!feedbackText.trim()) {
+      setFeedbackError("Please write feedback before submitting.");
+      return;
+    }
+
+    setIsSubmittingFeedback(true);
+
+    try {
+      const response = await fetch("/api/validate-feedback", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ feedback: feedbackText }),
+      });
+
+      const payload = (await response.json()) as { message?: string };
+
+      if (!response.ok) {
+        setFeedbackError(
+          payload.message || "That feedback does not seem meaningful. Please try again."
+        );
+        return;
+      }
+
       setHasGivenFeedback(true);
+      setFeedbackError("");
+    } catch (error) {
+      console.error("Error validating feedback:", error);
+      setFeedbackError("We could not validate your feedback right now. Please try again.");
+    } finally {
+      setIsSubmittingFeedback(false);
     }
   };
 
@@ -319,12 +353,27 @@ export function ResultsView({ results }: ResultsViewProps) {
                     <textarea
                       required
                       value={feedbackText}
-                      onChange={(e) => setFeedbackText(e.target.value)}
+                      onChange={(e) => {
+                        setFeedbackText(e.target.value);
+                        if (feedbackError) {
+                          setFeedbackError("");
+                        }
+                      }}
                       placeholder="Tell us what you think..."
+                      disabled={isSubmittingFeedback}
                       className="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-blue-600 focus:border-transparent resize-none h-24 text-gray-900 bg-white"
                     />
-                    <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-full transition shadow-lg hover:shadow-xl hover:-translate-y-0.5 text-lg">
-                      Submit & Unlock Solutions
+                    {feedbackError ? (
+                      <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-left text-sm text-red-700">
+                        {feedbackError}
+                      </p>
+                    ) : null}
+                    <button
+                      type="submit"
+                      disabled={isSubmittingFeedback}
+                      className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-full transition shadow-lg hover:shadow-xl hover:-translate-y-0.5 text-lg disabled:cursor-not-allowed disabled:bg-blue-400 disabled:hover:translate-y-0"
+                    >
+                      {isSubmittingFeedback ? "Checking feedback..." : "Submit & Unlock Solutions"}
                     </button>
                   </form>
                 </motion.div>

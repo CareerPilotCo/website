@@ -111,7 +111,7 @@ export default function LoginPage() {
           >
             <div className="flex justify-center mb-8">
               <Link href="/">
-                <Image src="/Logo.png" alt="CareerPilot Logo" width={200} height={50} className="h-10 w-auto object-contain cursor-pointer" />
+                <Image src="/careerpilot-logo-20260409.png" alt="CareerPilot Logo" width={200} height={50} className="h-10 w-auto object-contain cursor-pointer" />
               </Link>
             </div>
 

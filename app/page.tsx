@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useState, useRef, useEffect } from "react";
 import type { User } from "@supabase/supabase-js";
-import { UploadCloud, CheckCircle2 } from "lucide-react";
+import { UploadCloud, CheckCircle2, Crown } from "lucide-react";
 import { BackgroundGradientAnimation } from "@/components/ui/background-gradient-animation";
 import { ScanningLoader } from "@/components/ui/scanning-loader";
 import { ResultsView } from "@/components/ui/results-view";
@@ -300,7 +300,7 @@ export default function Home() {
             <nav className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
               <Link href="/" onClick={handleLogoClick} className="flex items-center gap-2">
                 <Image
-                  src="/Logo.png"
+                  src="/careerpilot-logo-20260409.png"
                   alt="CareerPilot Logo"
                   width={240}
                   height={60}
@@ -333,7 +333,22 @@ export default function Home() {
 
               {user ? (
                 <div className="flex items-center gap-4">
-                  <span className="text-gray-700 font-medium hidden sm:block">Hi, {user.user_metadata?.full_name || user.email?.split('@')[0]}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-gray-700 font-medium hidden sm:block">
+                      Hi, {user.user_metadata?.full_name || user.email?.split("@")[0]}
+                    </span>
+                    {userPlan === "premium" && (
+                      <>
+                        <span className="hidden sm:inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-900">
+                          <Crown className="h-3.5 w-3.5" />
+                          Premium
+                        </span>
+                        <span className="inline-flex sm:hidden items-center justify-center rounded-full bg-amber-100 p-2 text-amber-900">
+                          <Crown className="h-4 w-4" />
+                        </span>
+                      </>
+                    )}
+                  </div>
                   <Link href="/dashboard" className="text-gray-700 hover:text-blue-600 font-medium transition cursor-pointer">
                     Dashboard
                   </Link>
@@ -374,7 +389,7 @@ export default function Home() {
                 Get personalized feedback, scores, and insights tailored to your industry and location.
               </p>
 
-              {user && (
+              {user && userPlan !== "premium" && (
                 <div className={`w-full max-w-2xl rounded-3xl border px-6 py-5 text-left shadow-lg ${
                   reviewLimitReached
                     ? "border-amber-200 bg-amber-50/90"
@@ -383,30 +398,22 @@ export default function Home() {
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                       <p className="text-sm font-semibold uppercase tracking-[0.18em] text-gray-500">
-                        {userPlan === "premium" ? "Premium Access" : "Free Plan"}
+                        Free Plan
                       </p>
                       <p className="mt-1 text-lg font-semibold text-gray-900">
-                        {userPlan === "premium"
-                          ? "You can keep reviewing CVs without a review limit."
-                          : reviewLimitReached
-                            ? "Your free review has been used. Upgrade to keep reviewing."
-                            : `You have ${reviewsRemaining} free review ${reviewsRemaining === 1 ? "remaining" : "remaining"} before premium is required.`}
+                        {reviewLimitReached
+                          ? "Your free review has been used. Upgrade to keep reviewing."
+                          : `You have ${reviewsRemaining} free review ${reviewsRemaining === 1 ? "remaining" : "remaining"} before premium is required.`}
                       </p>
                       <p className="mt-1 text-sm text-gray-600">
-                        {userPlan === "premium"
-                          ? "Priority support and unlimited review history are available on your account."
-                          : "Premium unlocks unlimited CV reviews, ongoing history, and faster support."}
+                        Premium unlocks unlimited CV reviews, ongoing history, and faster support.
                       </p>
                     </div>
                     <Link
                       href="/pricing"
-                      className={`inline-flex items-center justify-center rounded-full px-5 py-3 text-sm font-semibold transition ${
-                        userPlan === "premium"
-                          ? "border border-blue-200 bg-white text-blue-700 hover:bg-blue-50"
-                          : "bg-blue-600 text-white shadow-md hover:bg-blue-700"
-                      }`}
+                      className="inline-flex items-center justify-center rounded-full bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-blue-700"
                     >
-                      {userPlan === "premium" ? "View Plan" : "See Premium"}
+                      See Premium
                     </Link>
                   </div>
                 </div>
@@ -632,7 +639,7 @@ export default function Home() {
               <div className="flex flex-col items-center md:items-start gap-2">
                 <Link href="/" onClick={handleLogoClick}>
                   <Image
-                    src="/Logo.png"
+                    src="/careerpilot-logo-20260409.png"
                     alt="CareerPilot Logo"
                     width={160}
                     height={40}

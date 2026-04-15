@@ -20,7 +20,7 @@ const plans = [
   },
   {
     name: "Premium",
-    price: "250 EGP / Month",
+    price: "Reach Out",
     description: "For job seekers who want to iterate, improve, and keep refining their CV.",
     features: [
       "Unlimited CV reviews",
@@ -42,7 +42,7 @@ export default function PricingPage() {
             <nav className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
               <Link href="/" className="flex items-center gap-2">
                 <Image
-                  src="/Logo.png"
+                  src="/careerpilot-logo-20260409.png"
                   alt="CareerPilot Logo"
                   width={240}
                   height={60}

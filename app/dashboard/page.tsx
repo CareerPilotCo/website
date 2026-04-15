@@ -103,7 +103,7 @@ export default function DashboardPage() {
         <nav className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
             <Image
-              src="/Logo.png"
+              src="/careerpilot-logo-20260409.png"
               alt="CareerPilot Logo"
               width={200}
               height={50}
