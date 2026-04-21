@@ -301,6 +301,11 @@ export default function DashboardPage() {
                   const candidateName = typeof result?.candidate_name === "string"
                     ? result.candidate_name.trim()
                     : "";
+                  const verdictClass = result?.verdict === "Keep"
+                    ? "bg-green-100 text-green-700"
+                    : result?.verdict === "Maybe" || result?.verdict === "Needs Work" || result?.verdict === "Needs work"
+                      ? "bg-blue-100 text-blue-700"
+                      : "bg-orange-100 text-orange-700";
                   const date = new Date(review.created_at).toLocaleDateString("en-US", {
                     year: "numeric",
                     month: "short",
@@ -316,21 +321,13 @@ export default function DashboardPage() {
                       className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition cursor-pointer group flex flex-col sm:flex-row sm:items-center justify-between gap-4"
                     >
                       <div className="flex items-start gap-4">
-                        <div className={`p-3 rounded-xl shrink-0 ${
-                          result?.verdict === "Keep" ? "bg-green-100 text-green-700" :
-                          result?.verdict === "Maybe" ? "bg-blue-100 text-blue-700" :
-                          "bg-orange-100 text-orange-700"
-                        }`}>
+                        <div className={`p-3 rounded-xl shrink-0 ${verdictClass}`}>
                           <FileText className="w-6 h-6" />
                         </div>
                         <div>
                           <h3 className="text-lg font-bold text-gray-900 mb-1 flex items-center gap-2">
                             {candidateName ? `${candidateName}'s CV Review` : `${review.career_level} Level CV Review`}
-                            <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${
-                              result?.verdict === "Keep" ? "bg-green-100 text-green-700" :
-                              result?.verdict === "Maybe" ? "bg-blue-100 text-blue-700" :
-                              "bg-orange-100 text-orange-700"
-                            }`}>
+                            <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${verdictClass}`}>
                               {result?.verdict || "Reviewed"}
                             </span>
                           </h3>

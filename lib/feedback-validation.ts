@@ -1,14 +1,77 @@
 export interface FeedbackValidationIssue {
   code:
     | "EMPTY"
-    | "TOO_SHORT"
-    | "NOT_ENOUGH_WORDS"
-    | "NOT_ENOUGH_LETTERS"
     | "PUNCTUATION_ONLY"
+    | "NUMBERS_ONLY"
+    | "PLACEHOLDER_TEXT"
+    | "INTERNET_SLANG"
+    | "KEYBOARD_MASH"
     | "REPEATED_CHARACTERS"
-    | "TOO_REPETITIVE";
+    | "TOO_REPETITIVE"
+    | "LOW_SIGNAL"
+    | "ONE_WORD_TOO_VAGUE";
   message: string;
 }
+
+const LOW_SIGNAL_EXACT_PATTERNS = new Set([
+  "ok",
+  "okay",
+  "k",
+  "kk",
+  "good",
+  "nice",
+  "great",
+  "cool",
+  "wow",
+  "yes",
+  "no",
+  "fine",
+  "test",
+  "testing",
+  "feedback",
+  "nothing",
+  "na",
+  "n/a",
+]);
+
+const LOW_SIGNAL_PHRASE_PATTERNS = [
+  /^good job!?$/i,
+  /^very good!?$/i,
+  /^looks good!?$/i,
+  /^all good!?$/i,
+  /^nice work!?$/i,
+  /^great job!?$/i,
+  /^so good!?$/i,
+  /^it('?s| is) good!?$/i,
+  /^it('?s| is) nice!?$/i,
+  /^it('?s| is) great!?$/i,
+];
+
+const KEYBOARD_MASH_PATTERNS = [
+  /qwerty/i,
+  /asdf/i,
+  /zxcv/i,
+  /^[bcdfghjklmnpqrstvwxyz]{6,}$/i,
+];
+
+const INTERNET_SLANG_PATTERNS = [
+  /^(?:lmao|lmfao|lol|lolol|rofl|wtf|bruh|bro|omg|idk|ikr|tbh|ngl|fr|frfr)$/i,
+  /^(?:haha|hahaha|hehe|hehehe|xd)+$/i,
+];
+
+const VAGUE_SINGLE_WORDS = new Set([
+  "amazing",
+  "awesome",
+  "bad",
+  "boring",
+  "clear",
+  "decent",
+  "helpful",
+  "perfect",
+  "solid",
+  "useful",
+  "weak",
+]);
 
 export function normalizeFeedbackText(input: string) {
   return input.replace(/\s+/g, " ").trim();
@@ -24,41 +87,74 @@ export function getFeedbackValidationIssue(input: string): FeedbackValidationIss
     };
   }
 
-  if (text.length < 12) {
-    return {
-      code: "TOO_SHORT",
-      message: "That feedback is too short to be useful. Please add a meaningful sentence.",
-    };
-  }
-
   if (!/[A-Za-z]/.test(text)) {
+    if (/^\d+$/.test(text.replace(/\s+/g, ""))) {
+      return {
+        code: "NUMBERS_ONLY",
+        message: "Please use real words instead of only numbers.",
+      };
+    }
+
     return {
       code: "PUNCTUATION_ONLY",
       message: "Please use real words instead of symbols or dots.",
     };
   }
 
-  const lettersOnly = text.replace(/[^A-Za-z]/g, "");
-  if (lettersOnly.length < 8) {
+  const lowered = text.toLowerCase();
+  if (LOW_SIGNAL_EXACT_PATTERNS.has(lowered) || LOW_SIGNAL_PHRASE_PATTERNS.some((pattern) => pattern.test(text))) {
     return {
-      code: "NOT_ENOUGH_LETTERS",
-      message: "Please write a little more so we can understand your feedback.",
+      code: "LOW_SIGNAL",
+      message: "Please share at least a little real feedback instead of a generic short phrase.",
     };
   }
 
-  const words = text
-    .toLowerCase()
+  const words = lowered
     .split(/\s+/)
     .map((word) => word.replace(/[^a-z]/g, ""))
     .filter(Boolean);
 
-  if (words.length < 3) {
+  if (words.length === 1) {
+    const onlyWord = words[0];
+
+    if (INTERNET_SLANG_PATTERNS.some((pattern) => pattern.test(onlyWord))) {
+      return {
+        code: "INTERNET_SLANG",
+        message: "Please write real feedback instead of slang or reaction words.",
+      };
+    }
+
+    if (VAGUE_SINGLE_WORDS.has(onlyWord) || onlyWord.length <= 5) {
+      return {
+        code: "ONE_WORD_TOO_VAGUE",
+        message: "Please write at least a short phrase so your feedback is meaningful.",
+      };
+    }
+  }
+
+  if (words.length === 1 && (words[0] === "lorem" || words[0] === "ipsum")) {
     return {
-      code: "NOT_ENOUGH_WORDS",
-      message: "Please write at least a short sentence with a few real words.",
+      code: "PLACEHOLDER_TEXT",
+      message: "Please write real feedback instead of placeholder text.",
     };
   }
 
+  if (/lorem ipsum/i.test(text) || /\b(?:test|testing)\b[\s.!?]*\b(?:test|testing)\b/i.test(text)) {
+    return {
+      code: "PLACEHOLDER_TEXT",
+      message: "Please write real feedback instead of placeholder text.",
+    };
+  }
+
+  const compactText = text.replace(/\s+/g, "");
+  if (KEYBOARD_MASH_PATTERNS.some((pattern) => pattern.test(compactText))) {
+    return {
+      code: "KEYBOARD_MASH",
+      message: "That looks like random letters instead of feedback. Please try again.",
+    };
+  }
+
+  const lettersOnly = text.replace(/[^A-Za-z]/g, "");
   if (/^(.)\1{5,}$/i.test(lettersOnly)) {
     return {
       code: "REPEATED_CHARACTERS",
@@ -67,7 +163,7 @@ export function getFeedbackValidationIssue(input: string): FeedbackValidationIss
   }
 
   const uniqueWords = new Set(words);
-  if (uniqueWords.size <= 1 || uniqueWords.size === 2 && words.length >= 4) {
+  if ((uniqueWords.size === 1 && words.length >= 2) || (uniqueWords.size === 2 && words.length >= 5)) {
     return {
       code: "TOO_REPETITIVE",
       message: "Please write feedback that explains your experience instead of repeating the same word.",

@@ -42,7 +42,7 @@ codeJSON
 
     "verdict_reason": "One blunt sentence explaining the single biggest reason for the verdict.",
 
-    "career_level": "Fresh" | "Mid" | "Senior",
+    "career_level": "Early Career" | "Experienced" | "Senior / Manager",
 
     "executive_summary": "A short, high-level paragraph covering the CV's overall strengths and most critical flaws.",
 
@@ -135,7 +135,7 @@ GATE CHECKS (ERROR TRIGGERS)Before scoring, check these gates. If triggered, ret
 
 MISSING_CV: No CV content provided.
 
-MISSING_CAREER_LEVEL: Missing designation of Fresh (0-2 yrs), Mid (3-7 yrs), or Senior (8+ yrs).
+MISSING_CAREER_LEVEL: Missing designation of Early Career (1-4 yrs), Experienced (5-9 yrs), or Senior / Manager (10+ yrs).
 
 NON_ENGLISH_CV: CV is not in English. (Message: "This CV appears to be in [language]. My review is conducted against English-language market standards. Would you like to proceed...")
 
@@ -149,7 +149,7 @@ Max Scores: Contact Info (10), Prof. Summary (10), Work Exp. (30), Skills (20),
 
 Status Calibration: Strong (90-100% of max), Acceptable (70-80%), Needs Work (50-60%), Critical Risk (< 50%).
 
-Quantification Penalty (Work Experience): For Mid/Senior levels: If < 50% of bullets contain metrics (%, $, #), Work Experience score cannot exceed 20/30 (cap_applied: true). Fresh level: Flag gaps in findings, but do not apply the hard cap.
+Quantification Penalty (Work Experience): For Experienced/Senior / Manager levels: If < 50% of bullets contain metrics (%, $, #), Work Experience score cannot exceed 20/30 (cap_applied: true). Early Career level: Flag gaps in findings, but do not apply the hard cap.
 
 The "So What?" Test: If a bullet shows task-only with no impact/result, deduct quality points and flag in findings.
 
@@ -188,7 +188,7 @@ Gaps > 3 months or Job Hopping (3+ roles in < 3 yrs) -> flag as risks.
 
 Inflated titles -> "Title Credibility Risk".
 
-Length: Fresh (>1 pg), Mid (>2 pgs), Senior (>3 pgs) -> flag as over-length.Skills:
+Length: Early Career (>1 pg), Experienced (>2 pgs), Senior / Manager (>3 pgs) -> flag as over-length.Skills:
 
 Generic buzzwords ("hard-working", "passionate") -> "Soft Filler — Remove". Must balance hard skills/tools.Education:
 
@@ -205,7 +205,6 @@ List ALL spelling/grammar issues.
 If Language & Hygiene score <= 4/10 -> set hygiene_risk_label to "RECRUITER RISK — Do Not Submit".
 
 FINAL INSTRUCTIONEvaluate the provided CV silently. Output ONLY the JSON.
-
 
 
 

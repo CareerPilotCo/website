@@ -19,7 +19,7 @@ export default function Home() {
   const router = useRouter();
   const [dragActive, setDragActive] = useState(false);
   const [file, setFile] = useState<File | null>(null);
-  const [careerLevel, setCareerLevel] = useState<string>("Fresh");
+  const [careerLevel, setCareerLevel] = useState<string>("Early Career");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const [analysisResults, setAnalysisResults] = useState<ReviewResult | null>(null);
@@ -458,7 +458,7 @@ export default function Home() {
                     <div className="w-full flex flex-col gap-2 text-left" onClick={(e) => e.stopPropagation()}>
                       <label className="text-sm font-semibold text-gray-700">Select your career level:</label>
                       <div className="grid grid-cols-3 gap-2">
-                        {["Fresh", "Mid", "Senior"].map((level) => (
+                        {["Early Career", "Experienced", "Senior/Manager"].map((level) => (
                           <button
                             key={level}
                             type="button"
@@ -469,7 +469,11 @@ export default function Home() {
                                 : "bg-white text-gray-700 border-gray-300 hover:border-blue-400 hover:bg-blue-50"
                             }`}
                           >
-                            {level === "Fresh" ? "Fresh (0-2 yrs)" : level === "Mid" ? "Mid (3-7 yrs)" : "Senior (8+ yrs)"}
+                            {level === "Early Career"
+                              ? "Early Career (1-4 yrs)"
+                              : level === "Experienced"
+                                ? "Experienced (5-9 yrs)"
+                                : "Senior/Manager (10+ yrs)"}
                           </button>
                         ))}
                       </div>

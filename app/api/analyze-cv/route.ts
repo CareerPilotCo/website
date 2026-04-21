@@ -9,7 +9,7 @@ export async function POST(req: Request) {
   try {
     const formData = await req.formData();
     const file = formData.get("cv") as File | null;
-    const careerLevel = formData.get("careerLevel") as string || "Fresh";
+    const careerLevel = formData.get("careerLevel") as string || "Early Career";
 
     if (!file) {
       return NextResponse.json(

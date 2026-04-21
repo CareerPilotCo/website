@@ -3,7 +3,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { Lock, CheckCircle2, AlertCircle, MessageSquare, Send, Mail } from "lucide-react";
 import { useState } from "react";
-import type { PriorityFix, ReviewResult, ReviewSection } from "@/lib/types";
+import type { AtsRecruiterRiskFlag, PriorityFix, ReviewResult, ReviewSection, ReviewSectionStatus } from "@/lib/types";
 
 interface ResultsViewProps {
   isLoggedIn?: boolean;
@@ -70,9 +70,26 @@ export function ResultsView({ results }: ResultsViewProps) {
 
   const data = results?.type === "success" ? results.data : undefined;
   const candidateName = typeof data?.candidate_name === "string" ? data.candidate_name.trim() : "";
+  const mergedRiskFlags = (data?.ats_recruiter_risk_flags?.length
+    ? data.ats_recruiter_risk_flags
+    : data?.ats_flags) ?? [];
   const defaultWhatsappMessage = candidateName
     ? `Hi, I'm ${candidateName}. I just got my CV reviewed and I'd like professional help improving it. Can we schedule a consultation?`
     : "Hi, I just got my CV reviewed and I need professional help fixing it. Can we schedule a consultation?";
+
+  const getStatusTextClass = (status: ReviewSectionStatus) => {
+    if (status === "Strong" || status === "Likely to Hire") return "text-green-600";
+    if (status === "Acceptable" || status === "Maybe") return "text-blue-600";
+    if (status === "Needs Work" || status === "Not Yet") return "text-orange-600";
+    return "text-red-600";
+  };
+
+  const getStatusBadgeClass = (status: ReviewSectionStatus) => {
+    if (status === "Strong" || status === "Likely to Hire") return "bg-green-100 text-green-700";
+    if (status === "Acceptable" || status === "Maybe") return "bg-blue-100 text-blue-700";
+    if (status === "Needs Work" || status === "Not Yet") return "bg-orange-100 text-orange-700";
+    return "bg-red-100 text-red-700";
+  };
 
   return (
     <div className="w-full max-w-5xl mx-auto px-4 py-8">
@@ -140,11 +157,7 @@ export function ResultsView({ results }: ResultsViewProps) {
                     {data?.sections?.map((section: ReviewSection, idx: number) => (
                       <tr key={idx} className="border-b border-gray-100">
                         <td className="p-4 font-medium">{section.name}</td>
-                        <td className={`p-4 font-medium ${
-                          section.status === 'Strong' ? 'text-green-600' :
-                          section.status === 'Acceptable' ? 'text-blue-600' :
-                          section.status === 'Needs Work' ? 'text-orange-600' : 'text-red-600'
-                        }`}>{section.status}</td>
+                        <td className={`p-4 font-medium ${getStatusTextClass(section.status)}`}>{section.status}</td>
                         <td className="p-4 text-right font-semibold">{section.score} / {section.max_score}</td>
                       </tr>
                     ))}
@@ -172,11 +185,7 @@ export function ResultsView({ results }: ResultsViewProps) {
                     <div key={idx} className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
                       <h4 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
                         {section.name} 
-                        <span className={`text-sm font-semibold px-3 py-1 rounded-full ${
-                            section.status === 'Strong' ? 'bg-green-100 text-green-700' :
-                            section.status === 'Acceptable' ? 'bg-blue-100 text-blue-700' :
-                            section.status === 'Needs Work' ? 'bg-orange-100 text-orange-700' : 'bg-red-100 text-red-700'
-                        }`}>
+                        <span className={`text-sm font-semibold px-3 py-1 rounded-full ${getStatusBadgeClass(section.status)}`}>
                           {section.status}
                         </span>
                       </h4>
@@ -258,14 +267,17 @@ export function ResultsView({ results }: ResultsViewProps) {
                   An Applicant Tracking System (ATS) is software recruiters use to scan, parse, and filter CVs before a human sees them. Poor formatting — such as tables, non-standard layouts, or functional structures — can cause your CV to be read incorrectly or filtered out.
                 </p>
                 
-                {data?.ats_flags && data.ats_flags.length > 0 ? (
+                {mergedRiskFlags.length > 0 ? (
                   <div className="bg-red-50/80 p-6 rounded-xl border border-red-200 mt-4">
                     <h4 className="font-bold text-red-900 mb-3 flex items-center gap-2">
                       <AlertCircle className="w-5 h-5" /> High-Risk Issues Identified
                     </h4>
                     <ul className="list-disc pl-5 space-y-2 text-red-800">
-                      {data.ats_flags.map((flag, idx: number) => (
-                        <li key={idx}><strong>{flag.risk_level} Risk:</strong> {flag.flag}</li>
+                      {mergedRiskFlags.map((flag: AtsRecruiterRiskFlag, idx: number) => (
+                        <li key={idx}>
+                          <strong>{flag.risk_level} Risk:</strong> {flag.flag}
+                          {flag.type === "hygiene" && flag.original_text ? ` Example: "${flag.original_text}"` : ""}
+                        </li>
                       ))}
                     </ul>
                     <p className="text-red-900 font-semibold mt-4">
