@@ -8,28 +8,14 @@ export interface FeedbackValidationIssue {
     | "KEYBOARD_MASH"
     | "REPEATED_CHARACTERS"
     | "TOO_REPETITIVE"
-    | "LOW_SIGNAL"
-    | "ONE_WORD_TOO_VAGUE";
+    | "LOW_SIGNAL";
   message: string;
 }
 
 const LOW_SIGNAL_EXACT_PATTERNS = new Set([
-  "ok",
-  "okay",
   "k",
   "kk",
-  "good",
-  "nice",
-  "great",
-  "cool",
-  "wow",
-  "yes",
-  "no",
-  "fine",
-  "test",
-  "testing",
   "feedback",
-  "nothing",
   "na",
   "n/a",
 ]);
@@ -58,20 +44,6 @@ const INTERNET_SLANG_PATTERNS = [
   /^(?:lmao|lmfao|lol|lolol|rofl|wtf|bruh|bro|omg|idk|ikr|tbh|ngl|fr|frfr)$/i,
   /^(?:haha|hahaha|hehe|hehehe|xd)+$/i,
 ];
-
-const VAGUE_SINGLE_WORDS = new Set([
-  "amazing",
-  "awesome",
-  "bad",
-  "boring",
-  "clear",
-  "decent",
-  "helpful",
-  "perfect",
-  "solid",
-  "useful",
-  "weak",
-]);
 
 export function normalizeFeedbackText(input: string) {
   return input.replace(/\s+/g, " ").trim();
@@ -123,13 +95,6 @@ export function getFeedbackValidationIssue(input: string): FeedbackValidationIss
         message: "Please write real feedback instead of slang or reaction words.",
       };
     }
-
-    if (VAGUE_SINGLE_WORDS.has(onlyWord) || onlyWord.length <= 5) {
-      return {
-        code: "ONE_WORD_TOO_VAGUE",
-        message: "Please write at least a short phrase so your feedback is meaningful.",
-      };
-    }
   }
 
   if (words.length === 1 && (words[0] === "lorem" || words[0] === "ipsum")) {
@@ -139,7 +104,7 @@ export function getFeedbackValidationIssue(input: string): FeedbackValidationIss
     };
   }
 
-  if (/lorem ipsum/i.test(text) || /\b(?:test|testing)\b[\s.!?]*\b(?:test|testing)\b/i.test(text)) {
+  if (/lorem ipsum/i.test(text) || /\b(?:test|testing)\b(?:[\s.!?]+\b(?:test|testing)\b)?/i.test(text)) {
     return {
       code: "PLACEHOLDER_TEXT",
       message: "Please write real feedback instead of placeholder text.",
